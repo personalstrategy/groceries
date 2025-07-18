@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -30,7 +29,7 @@
             top: 0;
             z-index: 10;
             background: #FAF8F3;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+           
         }
         
         .header {
@@ -98,12 +97,11 @@
             background: white;
             border: 1px solid #E8E3D3;
             border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 12px;
+            padding: 8px;
+            margin-bottom: 4px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            gap: 8px;
             transition: all 0.3s ease;
             animation: slideIn 0.3s ease;
             position: relative;
@@ -201,6 +199,23 @@
             user-select: none;
         }
         
+        .delete-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: #D4CDBD;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        
+
         .empty-state {
             text-align: center;
             color: #6B8E59;
@@ -243,7 +258,6 @@
     <div class="sticky-top">
         <div class="header">
             <h1>Grocery List</h1>
-            <p>Synced in real-time</p>
         </div>
         
         <div class="add-item-wrapper">
@@ -362,15 +376,12 @@
             itemEl.className = `item ${item.done ? 'done' : ''}`;
             itemEl.id = item.id;
             itemEl.innerHTML = `
-                <div class="delete-background">Delete</div>
                 <div class="item-content">
                     <div class="checkbox" onclick="toggleItem('${item.id}')"></div>
                     <div class="item-text">${escapeHtml(item.text)}</div>
+                    <button class="delete-btn" onclick="deleteItem('${item.id}')" title="Delete">🗑</button>
                 </div>
             `;
-            
-            // Add swipe listeners
-            addSwipeListeners(itemEl);
             
             // Always insert at the top of the list (after empty state if present)
             const firstItem = listEl.querySelector('.item');
@@ -378,76 +389,6 @@
                 listEl.insertBefore(itemEl, firstItem);
             } else {
                 listEl.appendChild(itemEl);
-            }
-        }
-        
-        function addSwipeListeners(itemEl) {
-            const content = itemEl.querySelector('.item-content');
-            let startX = 0;
-            let currentX = 0;
-            let startY = 0;
-            let isDragging = false;
-            let swipeThreshold = 80;
-            
-            // Touch events
-            content.addEventListener('touchstart', handleStart, { passive: true });
-            content.addEventListener('touchmove', handleMove, { passive: false });
-            content.addEventListener('touchend', handleEnd);
-            
-            // Mouse events for testing
-            content.addEventListener('mousedown', handleStart);
-            content.addEventListener('mousemove', handleMove);
-            content.addEventListener('mouseup', handleEnd);
-            content.addEventListener('mouseleave', handleEnd);
-            
-            function handleStart(e) {
-                isDragging = true;
-                startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-                startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-                currentX = startX;
-                itemEl.classList.add('swiping');
-            }
-            
-            function handleMove(e) {
-                if (!isDragging) return;
-                
-                e.preventDefault();
-                currentX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-                const currentY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-                
-                const diffX = currentX - startX;
-                const diffY = currentY - startY;
-                
-                // Only swipe if horizontal movement is greater than vertical
-                if (Math.abs(diffX) > Math.abs(diffY)) {
-                    // Only allow left swipe
-                    if (diffX < 0) {
-                        content.style.transform = `translateX(${diffX}px)`;
-                        const opacity = Math.min(Math.abs(diffX) / swipeThreshold, 1);
-                        itemEl.querySelector('.delete-background').style.opacity = opacity;
-                    }
-                }
-            }
-            
-            function handleEnd(e) {
-                if (!isDragging) return;
-                isDragging = false;
-                
-                const diffX = currentX - startX;
-                itemEl.classList.remove('swiping');
-                
-                if (diffX < -swipeThreshold) {
-                    // Delete animation
-                    content.style.transform = `translateX(-100%)`;
-                    itemEl.querySelector('.delete-background').style.opacity = 1;
-                    setTimeout(() => {
-                        deleteItem(itemEl.id);
-                    }, 300);
-                } else {
-                    // Snap back
-                    content.style.transform = '';
-                    itemEl.querySelector('.delete-background').style.opacity = 0;
-                }
             }
         }
         
