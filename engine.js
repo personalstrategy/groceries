@@ -20,6 +20,7 @@
         
         // Track items
         let items = new Map();
+        let editingId = null;
         
         // Listen for real-time updates
         itemsRef.orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
@@ -41,6 +42,7 @@
                 }
             });
             
+            sortItems();
             updateEmptyState();
         }, (error) => {
             console.error('Error listening to changes:', error);
@@ -85,6 +87,111 @@
             });
         }
         
+        // Edit item
+        function startEdit(id) {
+            if (editingId && editingId !== id) {
+                cancelEdit(editingId);
+            }
+            
+            const item = items.get(id);
+            if (!item) return;
+            
+            const itemEl = document.getElementById(id);
+            const textEl = itemEl.querySelector('.item-text');
+            
+            editingId = id;
+            textEl.contentEditable = true;
+            textEl.classList.add('editing');
+            
+            // Select all text
+            const range = document.createRange();
+            range.selectNodeContents(textEl);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            
+            // Handle save on blur or enter
+            textEl.addEventListener('blur', () => saveEdit(id), { once: true });
+            textEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    textEl.blur();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelEdit(id);
+                }
+            });
+        }
+        
+        function saveEdit(id) {
+            const itemEl = document.getElementById(id);
+            if (!itemEl) return;
+            
+            const textEl = itemEl.querySelector('.item-text');
+            const newText = textEl.textContent.trim();
+            const item = items.get(id);
+            
+            if (newText && newText !== item.text) {
+                itemsRef.doc(id).update({
+                    text: newText
+                }).catch((error) => {
+                    console.error('Error updating item:', error);
+                    textEl.textContent = item.text;
+                });
+            } else {
+                textEl.textContent = item.text;
+            }
+            
+            textEl.contentEditable = false;
+            textEl.classList.remove('editing');
+            editingId = null;
+        }
+        
+        function cancelEdit(id) {
+            const itemEl = document.getElementById(id);
+            if (!itemEl) return;
+            
+            const textEl = itemEl.querySelector('.item-text');
+            const item = items.get(id);
+            
+            textEl.textContent = item.text;
+            textEl.contentEditable = false;
+            textEl.classList.remove('editing');
+            editingId = null;
+        }
+        
+        // Sort items (unchecked first, then checked)
+        function sortItems() {
+            const allItems = Array.from(listEl.querySelectorAll('.item'));
+            const emptyState = listEl.querySelector('.empty-state');
+            
+            // Sort items by done status
+            allItems.sort((a, b) => {
+                const aItem = items.get(a.id);
+                const bItem = items.get(b.id);
+                
+                if (aItem.done === bItem.done) {
+                    // If same status, maintain creation order
+                    return 0;
+                }
+                
+                return aItem.done ? 1 : -1;
+            });
+            
+            // Clear list
+            listEl.innerHTML = '';
+            
+            // Re-append empty state if exists
+            if (emptyState) {
+                listEl.appendChild(emptyState);
+            }
+            
+            // Re-append sorted items
+            allItems.forEach(item => {
+                listEl.appendChild(item);
+            });
+        }
+        
         // DOM manipulation functions
         function addItemToDOM(item) {
             const itemEl = document.createElement('div');
@@ -93,7 +200,7 @@
             itemEl.innerHTML = `
                 <div class="item-content">
                     <div class="checkbox" onclick="toggleItem('${item.id}')"></div>
-                    <div class="item-text">${escapeHtml(item.text)}</div>
+                    <div class="item-text" onclick="startEdit('${item.id}')">${escapeHtml(item.text)}</div>
                     <button class="delete-btn" onclick="deleteItem('${item.id}')" title="Delete">
                         <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
                             <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -106,19 +213,18 @@
                 </div>
             `;
             
-            // Always insert at the top of the list (after empty state if present)
-            const firstItem = listEl.querySelector('.item');
-            if (firstItem) {
-                listEl.insertBefore(itemEl, firstItem);
-            } else {
-                listEl.appendChild(itemEl);
-            }
+            listEl.appendChild(itemEl);
         }
         
         function updateItemInDOM(item) {
             const itemEl = document.getElementById(item.id);
             if (itemEl) {
                 itemEl.className = `item ${item.done ? 'done' : ''}`;
+                // Update text if not currently editing
+                if (editingId !== item.id) {
+                    const textEl = itemEl.querySelector('.item-text');
+                    textEl.textContent = item.text;
+                }
             }
         }
         
