@@ -1,21 +1,21 @@
 {
   "name": "Grocery List",
   "short_name": "Groceries",
-  "description": "Simple grocery list with real-time sync",
+  "description": "Live sync groceries list",
   "theme_color": "#4F46E5",
   "background_color": "#667eea",
   "display": "standalone",
   "orientation": "portrait",
-  "start_url": "/",
+  "start_url": "https://personalstrategy.github.io/groceries/",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "https://personalstrategy.github.io/groceries/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "https://personalstrategy.github.io/groceries/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
