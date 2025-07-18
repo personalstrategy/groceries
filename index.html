@@ -25,14 +25,18 @@
             padding: 0;
         }
         
-        .header {
-            text-align: center;
-            color: #2D5016;
-            padding: 20px 20px 24px;
-            background: #FAF8F3;
+        .sticky-top {
             position: sticky;
             top: 0;
             z-index: 10;
+            background: #FAF8F3;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        
+        .header {
+            text-align: center;
+            color: #2D5016;
+            padding: 20px 20px 16px;
         }
         
         .header h1 {
@@ -49,7 +53,13 @@
         }
         
         .list-container {
-            padding: 0 20px 40px;
+            padding: 16px 20px 40px;
+            max-width: 440px;
+            margin: 0 auto;
+        }
+        
+        .add-item-wrapper {
+            padding: 0 20px 20px;
             max-width: 440px;
             margin: 0 auto;
         }
@@ -230,18 +240,22 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Grocery List</h1>
-        <p>Synced in real-time</p>
+    <div class="sticky-top">
+        <div class="header">
+            <h1>Grocery List</h1>
+            <p>Synced in real-time</p>
+        </div>
+        
+        <div class="add-item-wrapper">
+            <div class="add-item-field">
+                <input type="text" id="newItem" placeholder="Add item..." autocomplete="off" enterkeyhint="done">
+            </div>
+        </div>
     </div>
     
     <div class="offline-indicator" id="offlineIndicator">Offline</div>
     
     <div class="list-container">
-        <div class="add-item-field">
-            <input type="text" id="newItem" placeholder="Add item..." autocomplete="off" enterkeyhint="done">
-        </div>
-        
         <div id="list">
             <div class="empty-state">Your grocery list is empty</div>
         </div>
