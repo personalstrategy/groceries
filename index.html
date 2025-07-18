@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#4A7C20">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="manifest.json">
     
     <style>
         * {
@@ -18,24 +18,11 @@
             box-sizing: border-box;
         }
         
-        :root {
-            --keyboard-height: 0px;
-        }
-        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #FAF8F3;
             min-height: 100vh;
             padding: 0;
-            overflow: hidden;
-        }
-        
-        .app-container {
-            height: 100vh;
-            height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            position: relative;
         }
         
         .header {
@@ -43,7 +30,8 @@
             color: #2D5016;
             padding: 20px 20px 24px;
             background: #FAF8F3;
-            position: relative;
+            position: sticky;
+            top: 0;
             z-index: 10;
         }
         
@@ -61,16 +49,39 @@
         }
         
         .list-container {
-            flex: 1;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            padding: 0 20px 100px;
-            position: relative;
+            padding: 0 20px 40px;
+            max-width: 440px;
+            margin: 0 auto;
         }
         
-        .list {
-            max-width: 400px;
-            margin: 0 auto;
+        .add-item-field {
+            background: white;
+            border: 2px dashed #D4CDBD;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .add-item-field:focus-within {
+            border-color: #4A7C20;
+            border-style: solid;
+            box-shadow: 0 4px 12px rgba(74, 124, 32, 0.1);
+        }
+        
+        .add-item-field input {
+            flex: 1;
+            border: none;
+            font-size: 16px;
+            background: transparent;
+            outline: none;
+            color: #2D5016;
+        }
+        
+        .add-item-field input::placeholder {
+            color: #A8A292;
         }
         
         .item {
@@ -188,44 +199,6 @@
             font-family: Georgia, 'Times New Roman', serif;
         }
         
-        .add-item-container {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #FAF8F3;
-            padding: 16px 20px;
-            padding-bottom: calc(16px + env(safe-area-inset-bottom));
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
-            z-index: 100;
-        }
-        
-        .add-item-wrapper {
-            max-width: 400px;
-            margin: 0 auto;
-        }
-        
-        .add-item {
-            display: flex;
-        }
-        
-        .add-item input {
-            flex: 1;
-            padding: 16px 20px;
-            border: 1px solid #E8E3D3;
-            border-radius: 12px;
-            font-size: 16px;
-            background: white;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            transition: all 0.3s ease;
-        }
-        
-        .add-item input:focus {
-            outline: none;
-            border-color: #4A7C20;
-            box-shadow: 0 4px 12px rgba(74, 124, 32, 0.1);
-        }
-        
         .offline-indicator {
             position: fixed;
             top: 20px;
@@ -251,41 +224,26 @@
             }
             
             .list-container {
-                padding: 0 16px 100px;
-            }
-            
-            .add-item-container {
-                padding: 12px 16px;
-                padding-bottom: calc(12px + env(safe-area-inset-bottom));
-            }
-            
-            .add-item input {
-                padding: 14px 16px;
+                padding: 0 16px 40px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="header">
-            <h1>Grocery List</h1>
-            <p>Synced in real-time</p>
+    <div class="header">
+        <h1>Grocery List</h1>
+        <p>Synced in real-time</p>
+    </div>
+    
+    <div class="offline-indicator" id="offlineIndicator">Offline</div>
+    
+    <div class="list-container">
+        <div class="add-item-field">
+            <input type="text" id="newItem" placeholder="Add item..." autocomplete="off" enterkeyhint="done">
         </div>
         
-        <div class="offline-indicator" id="offlineIndicator">Offline</div>
-        
-        <div class="list-container">
-            <div class="list" id="list">
-                <div class="empty-state">Your grocery list is empty</div>
-            </div>
-        </div>
-        
-        <div class="add-item-container" id="addItemContainer">
-            <div class="add-item-wrapper">
-                <div class="add-item">
-                    <input type="text" id="newItem" placeholder="Add item..." autocomplete="off" enterkeyhint="done">
-                </div>
-            </div>
+        <div id="list">
+            <div class="empty-state">Your grocery list is empty</div>
         </div>
     </div>
 
@@ -293,17 +251,10 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+    
     <script>
-        // Firebase configuration - REPLACE WITH YOUR CONFIG
-        const firebaseConfig = {
-            apiKey: "AIzaSyCUdvZzxrR3vxwoA5XE_j3dIm6SihQu-s0",
-            authDomain: "groceries-list-2c49d.firebaseapp.com",
-            projectId: "groceries-list-2c49d",
-            storageBucket: "groceries-list-2c49d.firebasestorage.app",
-            messagingSenderId: "679441493156",
-            appId: "1:679441493156:web:4917bf068234b20e67ca31"
-        };
-        
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
@@ -323,16 +274,9 @@
         const listEl = document.getElementById('list');
         const newItemInput = document.getElementById('newItem');
         const offlineIndicator = document.getElementById('offlineIndicator');
-        const addItemContainer = document.getElementById('addItemContainer');
         
         // Track items
         let items = new Map();
-        
-        // Swipe handling
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let currentSwipeItem = null;
-        let swipeThreshold = 80;
         
         // Listen for real-time updates
         itemsRef.orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
@@ -370,6 +314,8 @@
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
                 newItemInput.value = '';
+                // Keep focus on input for rapid entry
+                newItemInput.focus();
             }).catch((error) => {
                 console.error('Error adding item:', error);
                 alert('Failed to add item. Please try again.');
@@ -412,7 +358,7 @@
             // Add swipe listeners
             addSwipeListeners(itemEl);
             
-            // Insert at the beginning for newest first
+            // Always insert at the top of the list (after empty state if present)
             const firstItem = listEl.querySelector('.item');
             if (firstItem) {
                 listEl.insertBefore(itemEl, firstItem);
@@ -427,6 +373,7 @@
             let currentX = 0;
             let startY = 0;
             let isDragging = false;
+            let swipeThreshold = 80;
             
             // Touch events
             content.addEventListener('touchstart', handleStart, { passive: true });
@@ -530,8 +477,10 @@
             }
         });
         
-        // Handle keyboard show/hide for mobile
-        // Remove the visualViewport listener since we're using CSS dvh units
+        // Auto-focus on load
+        window.addEventListener('load', () => {
+            newItemInput.focus();
+        });
         
         // Online/offline detection
         window.addEventListener('online', () => {
